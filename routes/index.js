@@ -5,13 +5,13 @@ var md5 = require('md5');
 var checkSessionAuth = require('../util/auth');
 var exec = require('child_process').exec;
 
-router.get(['/', '/register'], function(req, res, next) {
+router.get('/register', function(req, res, next) {
 
   res.render('register');
 
 })
 
-router.get('/login', function(req, res, next) {
+router.get(['/','/login'], function(req, res, next) {
   res.render('login', {failed: false});
 });
 

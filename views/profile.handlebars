@@ -7,20 +7,27 @@
 <div>
     <b>Comments:</b>
     <form method="POST" action="/comment">
-         <input type="hidden" name="uid" value="{{uid}}">
-        <textarea name="comment"></textarea>
-        <input type="submit" value="Submit" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
+        <input type="hidden" name="uid" value="{{uid}}">
+        <div class="row g-0 justify-content-start align-items-end">
+            <textarea name="comment" class="mb-1"></textarea>
+            <input type="submit" value="Submit" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
+        </div>
     </form>
+    
 
     <br>
 
+    <div class="row g-0 justify-content-between pb-3 align-items-start">
     {{#each comments}}
-        <div class="row g-0">
-            <p>"{{{this.comment}}}", {{this.name}}</p>
-            {{#if ../admin}}
-                <a href="/delete/comment/{{this.id}}" >DELETE</a>
-            {{/if}}
-        </div>
+            <div class="col-lg-auto col-md-12 my-1 justify-content-end shadow rounded border border-dark">
+                {{#if ../admin}}
+                    <a href="/delete/comment/{{this.id}}" style="width: 2em;" class="btn btn-danger col-1 shadow p-0">X</a>
+                {{/if}}
+                <h1 class="row g-0 mx-3">"{{{this.comment}}}"</h1>
+                <div class="row g-0 px-3 justify-content-start align-items-start">{{this.name}}</div>
+            </div>
     {{/each}}
+    </div>
+
 
 </div>
