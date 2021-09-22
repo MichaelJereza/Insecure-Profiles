@@ -11,16 +11,36 @@ router.get('/register', function(req, res, next) {
 
 })
 
-router.get(['/','/login'], function(req, res, next) {
+router.get('/login', function(req, res, next) {
   res.render('login', {failed: false});
 });
 
-router.get('/postlogin', checkSessionAuth, function(req, res, next) {
+router.get('/', function(req, res, next) {
+  db.get("SELECT * FROM user WHERE id=? AND session=?", [req.session.userId, req.sessionID], (err, row) => {
+    if(row) {
+      res.redirect('/home');
+    } else {
+      res.redirect('/login');
+    }
+  })
+})
+
+router.get('/home', checkSessionAuth, function(req, res, next) {
 
   db.get("SELECT name FROM user WHERE id=?", [req.session.userId], (err, row) => {
 
     if(row) {
-      res.status(200).send(`Success! Logged in as ${row.name}`);
+
+      db.all('SELECT message, name, message.id FROM message INNER JOIN user ON message.author=user.id WHERE recipient=?', [req.session.userId], (error, messages) => {
+      
+        db.all('SELECT id, email FROM user', (error2, users) => {
+
+          res.render('landing', {username: row.name, author: req.session.userId, messages: messages, recipients: users});
+        
+        });
+
+      });
+
     }
 
   })
@@ -46,7 +66,7 @@ router.post('/login', function(req, res, next) {
 
         req.session.userId = row.id;
         req.session.save(()=> {
-          res.redirect(302, '/postlogin');
+          res.redirect(302, '/home');
         })
 
       })
@@ -59,10 +79,17 @@ router.post('/login', function(req, res, next) {
  
 })
 
+router.get('/logout', function(req, res, next) {
+  req.session.destroy((err) => {
+    res.redirect('/')
+  })
+})
+
 // TODO
 // - Make the login cookie insecure
 // - Outline the proper remediations for all of the above
-
+// - IDOR
+// - CSRF
 
 router.post('/register', function(req, res, next) {
   
@@ -100,6 +127,17 @@ router.post('/comment', checkSessionAuth, function(req, res ,next) {
 
 })
 
+// IDOR in author field
+router.post('/message', checkSessionAuth, function(req, res, next) {
+
+  db.run('INSERT INTO message (message, author, recipient) VALUES(?, ?, ?)', [req.body.message, req.body.author, req.body.recipient], (err, row) => {
+    if(!err) {
+      res.redirect('back');
+    }
+  })
+
+})
+
 router.get('/profile', checkSessionAuth, function(req, res, next) {
   db.get('SELECT * FROM user WHERE id=?', [req.session.userId], (err, row) => {
     if(row) {
@@ -119,7 +157,7 @@ router.get('/profile', checkSessionAuth, function(req, res, next) {
   })
 })
 
-// IDOR Can delete comments regardless of ownership
+// MFLAC Can delete comments regardless of ownership
 router.get('/delete/comment/:cid', function(req, res, next) {
 
   db.run('DELETE FROM comment WHERE id=?', [req.params.cid], (err, row) => {
@@ -197,6 +235,11 @@ router.get('/debug/:file', checkSessionAuth, function(req, res, next) {
       res.status(200).send(stdout);
   });
 
+})
+
+// Catch all 404
+router.get('/*', function(req, res, next) {
+  res.status(404).send("Resource doesn't exist!")
 })
 
 module.exports = router;

@@ -41,7 +41,21 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             if(err) {
                 // Table already created
             }
-        });  
+        });
+        
+        db.run(`CREATE TABLE message (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            message text,
+            author INTEGER NOT NULL,
+            recipient INTEGER NOT NULL,
+            FOREIGN KEY (author) REFERENCES user(id),
+            FOREIGN KEY (recipient) REFERENCES user(id)
+            )`,
+        (err) => {
+            if(err) {
+                // Table already created
+            }
+        });
     }
 });
 

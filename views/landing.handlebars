@@ -1,0 +1,36 @@
+<h1>Welcome {{username}}</h1>
+
+<div class="row">
+    <a href="/profile" style="text-decoration: none;">Go to my profile</a>
+    <a href="/logout" style="text-decoration: none;">Logout</a>
+</div>
+
+<h2>Direct messages:</h2>
+<form method="POST" action="/message">
+    <div class="row g-0 justify-content-start align-items-end">
+        <input type="hidden" name="author" value={{author}}>
+        <div class="input-group mb-1">
+            <div class="input-group-prepend">
+                <label class="input-group-text" id="recipient-label" for="recipient-select">To:</label>
+            </div>
+            <select name="recipient" aria-describedby="recipient-label" id="recipient-select" class="custom-select">
+                <option hidden selected></option>
+                {{#each recipients}}
+                    <option value={{this.id}}>{{this.email}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <textarea name="message" class="mb-1 p-1" placeholder="Message"></textarea>
+        <input type="submit" value="Send" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
+    </div>
+</form>
+
+<div class="row">
+    {{#each messages}}
+        <div>
+            {{this.id}}
+            {{this.message}}
+            {{this.name}}
+        </div>
+    {{/each}}    
+</div>

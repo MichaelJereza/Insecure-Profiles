@@ -1,5 +1,6 @@
 <h3>{{username}}</h3>
 
+<p><b>ID:</b> #{{uid}}</p>
 <p><b>Email:</b> {{email}}</p>
 <p><b>Password:</b> {{password}}</p>
 <p><b>Authenticated Session:</b> {{session}}</p>
@@ -9,7 +10,7 @@
     <form method="POST" action="/comment">
         <input type="hidden" name="uid" value="{{uid}}">
         <div class="row g-0 justify-content-start align-items-end">
-            <textarea name="comment" class="mb-1"></textarea>
+            <textarea name="comment" class="mb-1 p-1"></textarea>
             <input type="submit" value="Submit" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
         </div>
     </form>
@@ -17,9 +18,9 @@
 
     <br>
 
-    <div class="row g-0 justify-content-between pb-3 align-items-start">
+    <div class="row g-0 justify-content-start pb-3 align-items-start">
     {{#each comments}}
-            <div class="col-lg-auto col-md-12 my-1 justify-content-end shadow rounded border border-dark">
+            <div class="col-lg-auto col-md-12 m-1 justify-content-end shadow rounded border border-dark">
                 {{#if ../admin}}
                     <a href="/delete/comment/{{this.id}}" style="width: 2em;" class="btn btn-danger col-1 shadow p-0">X</a>
                 {{/if}}
