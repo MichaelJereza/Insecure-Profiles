@@ -1,0 +1,26 @@
+<h3>{{username}}</h3>
+
+<p><b>Email:</b> {{email}}</p>
+<p><b>Password:</b> {{password}}</p>
+<p><b>Authenticated Session:</b> {{session}}</p>
+
+<div>
+    <b>Comments:</b>
+    <form method="POST" action="/comment">
+         <input type="hidden" name="uid" value="{{uid}}">
+        <textarea name="comment"></textarea>
+        <input type="submit" value="Submit" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
+    </form>
+
+    <br>
+
+    {{#each comments}}
+        <div class="row g-0">
+            <p>"{{{this.comment}}}", {{this.name}}</p>
+            {{#if ../admin}}
+                <a href="/delete/comment/{{this.id}}" >DELETE</a>
+            {{/if}}
+        </div>
+    {{/each}}
+
+</div>

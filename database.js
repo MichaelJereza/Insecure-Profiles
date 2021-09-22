@@ -15,8 +15,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             email text UNIQUE, 
             password text,
             session text,
-            CONSTRAINT email_unique UNIQUE (email),
-            CONSTRAINT session_unique UNIQUE (session)
+            CONSTRAINT email_unique UNIQUE (email)
             )`,
         (err) => {
             if (err) {
@@ -27,6 +26,20 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                 db.run(insert, ["admin","admin@example.com",md5("admin123456")])
                 db.run(insert, ["user","user@example.com",md5("user123456")])
                 db.run(insert, ["user","test@test",md5("password")])
+            }
+        });
+        
+        db.run(`CREATE TABLE comment (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            comment text,
+            author INTEGER NOT NULL,
+            uid INTEGER NOT NULL,
+            FOREIGN KEY (author) REFERENCES user(id),
+            FOREIGN KEY (uid) REFERENCES user(id)
+            )`,
+        (err) => {
+            if(err) {
+                // Table already created
             }
         });  
     }

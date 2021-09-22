@@ -1,36 +1,32 @@
-<div class="container">
-    <div class="m-3">
-        <h1>Register Account</h1>
-        <form action="/register" method="POST">
-            <div class="input-group mb-1">
-                <span class="input-group-text col-2" id="name-label">Name</span>
-                <input name="name" type="text" class="form-control" placeholder="Name" aria-label="Name" aria-describedby="name-label">
-            </div>
-
-            <div class="input-group mb-1">
-                <span class="input-group-text col-2" id="username-label">Email</span>
-                <input name="email" type="email" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="username-label" minlength="3">
-            </div>
-
-            <div class="input-group mb-1">
-                <span class="input-group-text col-2" id="password-label">Password</span>
-                <input name="password" type="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="password-label" minlength="1">
-            </div>
-
-            <div class="row g-0">
-                <div class="col-2">
-                    <input type="submit" value="Register" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
-                </div>
-                <div class="col-10">
-                    {{#if failed}}
-                        <p>An error occurred registering user!</p>
-                    {{/if}}
-                </div>
-            </div>
-            <div>
-                <a href="/login" style="text-decoration: none;">Already registered?</a>
-            </div>
-
-        </form>
+<h1>Register Account</h1>
+<form action="/register" method="POST">
+    <div class="input-group mb-1">
+        <span class="input-group-text col-2" id="name-label">Name</span>
+        <input name="name" type="text" class="form-control" placeholder="Name" aria-label="Name" aria-describedby="name-label">
     </div>
-</div>
+
+    <div class="input-group mb-1">
+        <span class="input-group-text col-2" id="username-label">Email</span>
+        <input name="email" type="email" class="form-control" placeholder="Email" aria-label="Email" aria-describedby="username-label" minlength="3">
+    </div>
+
+    <div class="input-group mb-1">
+        <span class="input-group-text col-2" id="password-label">Password</span>
+        <input name="password" type="password" class="form-control" placeholder="Password" aria-label="Password" aria-describedby="password-label" minlength="1">
+    </div>
+
+    <div class="row g-0">
+        <div class="col-2">
+            <input type="submit" value="Register" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
+        </div>
+        <div class="col-10">
+            {{#if failed}}
+                <p>An error occurred registering user!</p>
+            {{/if}}
+        </div>
+    </div>
+    <div>
+        <a href="/login" style="text-decoration: none;">Already registered?</a>
+    </div>
+
+</form>
