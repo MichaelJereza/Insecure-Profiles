@@ -19,6 +19,9 @@
                     <option value={{this.id}}>{{this.email}}</option>
                 {{/each}}
             </select>
+        
+            <input name="csrf" type="hidden" value={{csrf}}>
+
         </div>
         <textarea name="message" class="mb-1 p-1" placeholder="Message"></textarea>
         <input type="submit" value="Send" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">

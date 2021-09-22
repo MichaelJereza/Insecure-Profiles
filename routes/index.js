@@ -2,17 +2,20 @@ var express = require('express');
 const db = require('../database');
 var router = express.Router();
 var md5 = require('md5');
-var checkSessionAuth = require('../util/auth');
+var {checkSessionAuth, checkCSRF} = require('../util/auth');
 var exec = require('child_process').exec;
+var csrf = require('../util/csrfTokens');
 
 router.get('/register', function(req, res, next) {
 
-  res.render('register');
+  res.render('register', {csrf: csrf.generateToken()});
 
 })
 
 router.get('/login', function(req, res, next) {
-  res.render('login', {failed: false});
+
+  res.render('login', {failed: false, csrf: csrf.generateToken()});
+
 });
 
 router.get('/', function(req, res, next) {
@@ -35,7 +38,7 @@ router.get('/home', checkSessionAuth, function(req, res, next) {
       
         db.all('SELECT id, email FROM user', (error2, users) => {
 
-          res.render('landing', {username: row.name, author: req.session.userId, messages: messages, recipients: users});
+          res.render('landing', {username: row.name, author: req.session.userId, messages: messages, recipients: users, csrf: csrf.generateToken()});
         
         });
 
@@ -47,7 +50,7 @@ router.get('/home', checkSessionAuth, function(req, res, next) {
 
 })
 
-router.post('/login', function(req, res, next) {
+router.post('/login', checkCSRF, function(req, res, next) {
 
   var reqEmail = req.body.email;
   var reqPassword = md5(req.body.password);
@@ -91,7 +94,7 @@ router.get('/logout', function(req, res, next) {
 // - IDOR
 // - CSRF
 
-router.post('/register', function(req, res, next) {
+router.post('/register', checkCSRF, function(req, res, next) {
   
   var reqEmail = req.body.email;
 
@@ -117,6 +120,7 @@ router.post('/register', function(req, res, next) {
 
 })
 
+// CSRF Vulnerable
 router.post('/comment', checkSessionAuth, function(req, res ,next) {
 
   db.run('INSERT INTO comment (comment, author, uid) VALUES(?, ?, ?)', [req.body.comment, req.session.userId, req.body.uid], (err, row) => {
@@ -128,7 +132,7 @@ router.post('/comment', checkSessionAuth, function(req, res ,next) {
 })
 
 // IDOR in author field
-router.post('/message', checkSessionAuth, function(req, res, next) {
+router.post('/message', checkSessionAuth, checkCSRF, function(req, res, next) {
 
   db.run('INSERT INTO message (message, author, recipient) VALUES(?, ?, ?)', [req.body.message, req.body.author, req.body.recipient], (err, row) => {
     if(!err) {
