@@ -65,6 +65,11 @@ router.post('/login', checkCSRF, function(req, res, next) {
 
     if(row) {
 
+      // Insecure Admin Cookie
+      if(row.admin === 1) {
+        res.cookie('admin', true);
+      }
+
       db.run("UPDATE user SET session=? WHERE id=?", [req.sessionID, row.id], (error, update) => {
 
         req.session.userId = row.id;
@@ -75,7 +80,7 @@ router.post('/login', checkCSRF, function(req, res, next) {
       })
   
     } else {
-      res.render('login', {failed: true});
+      res.render('login', {failed: true, csrf: csrf.generateToken()});
     }
     
   })
@@ -84,6 +89,7 @@ router.post('/login', checkCSRF, function(req, res, next) {
 
 router.get('/logout', function(req, res, next) {
   req.session.destroy((err) => {
+    res.clearCookie('admin')
     res.redirect('/')
   })
 })
@@ -91,8 +97,6 @@ router.get('/logout', function(req, res, next) {
 // TODO
 // - Make the login cookie insecure
 // - Outline the proper remediations for all of the above
-// - IDOR
-// - CSRF
 
 router.post('/register', checkCSRF, function(req, res, next) {
   
@@ -173,7 +177,7 @@ router.get('/delete/comment/:cid', function(req, res, next) {
 router.get('/profile/:uid', function(req, res, next) {
   db.get('SELECT * FROM user WHERE id=?', [req.params.uid], (err, row) => {
     if(row) {
-      db.all('SELECT comment, name FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
+      db.all('SELECT comment, name, comment.id FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
 
         res.render('profile', {
           cid: row.id,
@@ -182,7 +186,8 @@ router.get('/profile/:uid', function(req, res, next) {
           password: row.password,
           session: row.session,
           uid: req.params.uid,
-          comments: comments
+          comments: comments,
+          admin: row.session === req.sessionID || req.cookies.admin === "true"
         })
       })
     } else  {
