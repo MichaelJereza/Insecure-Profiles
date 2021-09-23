@@ -28,11 +28,12 @@
     </div>
 </form>
 
-<div class="row">
+<div class="row g-0">
     {{#each messages}}
-        <div>
-            {{this.id}}
-            {{this.message}}
+        <div class="shadow rounded border border-dark mb-3 py-1 px-3">
+            <h3>
+                {{this.message}}
+            </h3>
             {{this.name}}
         </div>
     {{/each}}    
