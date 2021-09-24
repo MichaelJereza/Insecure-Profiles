@@ -117,7 +117,7 @@ router.post('/register', checkCSRF, function(req, res, next) {
       })
 
     } else {
-      res.render('register', {failed: true});
+      res.render('register', {failed: true, csrf: csrf.generateToken()});
     }
 
   })
@@ -169,6 +169,15 @@ router.get('/profile', checkSessionAuth, function(req, res, next) {
 router.get('/delete/comment/:cid', function(req, res, next) {
 
   db.run('DELETE FROM comment WHERE id=?', [req.params.cid], (err, row) => {
+    res.redirect('back');
+  })
+
+})
+
+// MFLAC Remediation
+router.get('/delete/message/:cid', checkSessionAuth, function(req, res, next) {
+
+  db.run('DELETE FROM message WHERE id=? and recipient=?', [req.params.cid, req.session.userId], (err, row) => {
     res.redirect('back');
   })
 

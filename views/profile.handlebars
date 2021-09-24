@@ -1,4 +1,9 @@
-<h3>{{username}}</h3>
+<div class="row g-0 justify-content-start align-items-center">
+    <a href="/" style="font-size: 2rem" class="col-auto"><i class="bi bi-arrow-left-square-fill"></i></a>
+</div>
+<div class="row g-0 justify-content-center">
+    <h3 class="col-auto">{{username}}</h3>
+</div>
 
 <p><b>ID:</b> #{{uid}}</p>
 <p><b>Email:</b> {{email}}</p>
@@ -22,7 +27,7 @@
     {{#each comments}}
             <div class="col-lg-auto col-md-12 m-1 justify-content-end shadow rounded border border-dark">
                 {{#if ../admin}}
-                    <a href="/delete/comment/{{this.id}}" style="width: 2em;" class="btn btn-danger col-1 shadow p-0">X</a>
+                    <a href="/delete/comment/{{this.id}}" class="btn btn-danger col-auto shadow p-0"><i class="bi bi-x"></i></a>
                 {{/if}}
                 <h1 class="row g-0 mx-3">"{{{this.comment}}}"</h1>
                 <div class="row g-0 px-3 justify-content-start align-items-start">{{this.name}}</div>

@@ -1,8 +1,9 @@
-<h1>Welcome {{username}}</h1>
-
-<div class="row">
-    <a href="/profile" style="text-decoration: none;">Go to my profile</a>
-    <a href="/logout" style="text-decoration: none;">Logout</a>
+<div class="row g-0 justify-content-between align-items-start">
+    <h1 class="col-auto">Welcome {{username}}</h1>
+    <div class="col-auto">
+        <a href="/profile" style="text-decoration: none;" class="row g-0">My profile</a>
+        <a href="/logout" style="text-decoration: none;" class="row g-0">Logout</a>
+    </div>
 </div>
 
 <h2>Direct messages:</h2>
@@ -30,11 +31,15 @@
 
 <div class="row g-0">
     {{#each messages}}
-        <div class="shadow rounded border border-dark mb-3 py-1 px-3">
-            <h3>
-                {{this.message}}
-            </h3>
-            {{this.name}}
+        <div class="shadow rounded border border-dark mb-3">
+            <a href="/delete/message/{{this.id}}" class="btn btn-danger col-auto shadow p-0"><i class="bi bi-x"></i></a>
+            <div class="px-4 pb-1">
+                {{this.name}} said:
+                <h3>
+                    {{this.message}}
+                </h3>
+            </div>
+            
         </div>
     {{/each}}    
 </div>
