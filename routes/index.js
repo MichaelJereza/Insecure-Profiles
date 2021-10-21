@@ -19,19 +19,19 @@ var storage = multer.diskStorage({
 })
 const upload = multer({ storage: storage });
 
-router.get('/register', function(req, res, next) {
+router.get('/register', async function(req, res, next) {
 
   res.render('register', {csrf: csrf.generateToken()});
 
 })
 
-router.get('/login', function(req, res, next) {
+router.get('/login', async function(req, res, next) {
 
   res.render('login', {failed: false, csrf: csrf.generateToken()});
 
 });
 
-router.get('/', function(req, res, next) {
+router.get('/', async function(req, res, next) {
   db.get("SELECT * FROM user WHERE id=? AND session=?", [req.session.userId, req.sessionID], (err, row) => {
     if(row) {
       res.redirect('/home');
@@ -41,7 +41,7 @@ router.get('/', function(req, res, next) {
   })
 })
 
-router.get('/home', checkSessionAuth, function(req, res, next) {
+router.get('/home', checkSessionAuth, async function(req, res, next) {
 
   db.get("SELECT name FROM user WHERE id=?", [req.session.userId], (err, row) => {
 
@@ -63,7 +63,7 @@ router.get('/home', checkSessionAuth, function(req, res, next) {
 
 })
 
-router.post('/login', checkCSRF, function(req, res, next) {
+router.post('/login', checkCSRF, async function(req, res, next) {
 
   var reqEmail = req.body.email;
   var reqPassword = md5(req.body.password);
@@ -100,7 +100,7 @@ router.post('/login', checkCSRF, function(req, res, next) {
  
 })
 
-router.get('/logout', function(req, res, next) {
+router.get('/logout', async function(req, res, next) {
   req.session.destroy((err) => {
     res.clearCookie('admin')
     res.redirect('/')
@@ -111,7 +111,7 @@ router.get('/logout', function(req, res, next) {
 // - Make the login cookie insecure
 // - Outline the proper remediations for all of the above
 
-router.post('/register', checkCSRF, function(req, res, next) {
+router.post('/register', checkCSRF, async function(req, res, next) {
   
   var reqEmail = req.body.email;
 
@@ -149,7 +149,7 @@ router.post('/comment', checkSessionAuth, function(req, res ,next) {
 })
 
 // IDOR in author field
-router.post('/message', checkSessionAuth, checkCSRF, function(req, res, next) {
+router.post('/message', checkSessionAuth, checkCSRF, async function(req, res, next) {
 
   db.run('INSERT INTO message (message, author, recipient) VALUES(?, ?, ?)', [req.body.message, req.body.author, req.body.recipient], (err, row) => {
     if(!err) {
@@ -159,7 +159,7 @@ router.post('/message', checkSessionAuth, checkCSRF, function(req, res, next) {
 
 })
 
-router.get('/profile', checkSessionAuth, function(req, res, next) {
+router.get('/profile', checkSessionAuth, async function(req, res, next) {
   db.get('SELECT * FROM user WHERE id=?', [req.session.userId], (err, row) => {
     if(row) {
       db.all('SELECT comment, name, comment.id FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.session.userId], (error, comments) => {
@@ -179,7 +179,7 @@ router.get('/profile', checkSessionAuth, function(req, res, next) {
 })
 
 // MFLAC Can delete comments regardless of ownership
-router.get('/delete/comment/:cid', function(req, res, next) {
+router.get('/delete/comment/:cid', async function(req, res, next) {
 
   db.run('DELETE FROM comment WHERE id=?', [req.params.cid], (err, row) => {
     res.redirect('back');
@@ -188,7 +188,7 @@ router.get('/delete/comment/:cid', function(req, res, next) {
 })
 
 // MFLAC Remediation
-router.get('/delete/message/:cid', checkSessionAuth, function(req, res, next) {
+router.get('/delete/message/:cid', checkSessionAuth, async function(req, res, next) {
 
   db.run('DELETE FROM message WHERE id=? and recipient=?', [req.params.cid, req.session.userId], (err, row) => {
     res.redirect('back');
@@ -196,7 +196,7 @@ router.get('/delete/message/:cid', checkSessionAuth, function(req, res, next) {
 
 })
 
-router.get('/profile/:uid', function(req, res, next) {
+router.get('/profile/:uid', async function(req, res, next) {
   db.get('SELECT * FROM user WHERE id=?', [req.params.uid], (err, row) => {
     if(row) {
       db.all('SELECT comment, name, comment.id, comment.author FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
@@ -219,7 +219,7 @@ router.get('/profile/:uid', function(req, res, next) {
 })
 
 // XSS
-router.get('/get/:search', function(req, res, next) {
+router.get('/get/:search', async function(req, res, next) {
   var parameters = {
     urlParam: req.params.search,
     queryParam: req.query,
@@ -233,7 +233,7 @@ router.get('/get/:search', function(req, res, next) {
   })
 })
 
-router.post('/post/:search', function(req, res, next) {
+router.post('/post/:search', async function(req, res, next) {
   var parameters = {
     urlParam: req.params.search,
     queryParam: req.query,
@@ -248,7 +248,7 @@ router.post('/post/:search', function(req, res, next) {
 })
 
 // Command injection
-router.get('/debug/:file', checkSessionAuth, function(req, res, next) {
+router.get('/debug/:file', checkSessionAuth, async function(req, res, next) {
 
   var command = `cat ${req.params.file}`;
 
@@ -269,7 +269,7 @@ router.get('/debug/:file', checkSessionAuth, function(req, res, next) {
 })
 
 // File upload form
-router.get('/upload', checkSessionAuth, function(req, res, next) {
+router.get('/upload', checkSessionAuth, async function(req, res, next) {
   res.render('upload', {
 
   })
@@ -277,21 +277,19 @@ router.get('/upload', checkSessionAuth, function(req, res, next) {
 
 // Unvalidated file upload
 // TODO Add CSRF
-// const cpUpload = upload.fields([{ name: 'filecontent', maxCount: 1 }, { name: 'otherfield', maxCount: 1 }])
 const allowedFiletypes = /jpeg|jpg|png|gif/;
 router.post('/upload', checkSessionAuth, upload.single('filecontent'), async function(req, res, next) {
 
   let validExtension = allowedFiletypes.test(req.file.originalname.toLowerCase());
 
-  // console.log(req.file);
-
   if(!validExtension) {
-    await fs.unlinkSync(req.file.path);
+  
+    fs.unlinkSync(req.file.path);
     res.render('upload', {
       uploadFail: true
     })
   } else {
-    // console.log(req.file);
+  
     res.render('upload', {
       uploadComplete: true,
       uploadLocation: `files/${req.file.filename}`,
@@ -300,16 +298,8 @@ router.post('/upload', checkSessionAuth, upload.single('filecontent'), async fun
   }
 })
 
-// View file
-// router.get('/files/:filename', function(req, res, next) {
-
-//   let fileLocation = path.join(__dirname, "../files", path.normalize(req.params.filename));
-//   res.status(200).render(fileLocation);
-// })
-
-
 // Catch all 404
-router.get('/*', function(req, res, next) {
+router.get('/*', async function(req, res, next) {
   res.status(404).send("Resource doesn't exist!")
 })
 
