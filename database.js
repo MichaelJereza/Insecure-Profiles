@@ -16,6 +16,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             password text,
             session text,
             admin INTEGER DEFAULT 0,
+            backgroundUrl text,
             CONSTRAINT email_unique UNIQUE (email)
             )`,
         (err) => {

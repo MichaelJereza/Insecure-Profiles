@@ -21,13 +21,18 @@ const upload = multer({ storage: storage });
 
 router.get('/register', async function(req, res, next) {
 
-  res.render('register', {csrf: csrf.generateToken()});
+  res.render('register', {
+    csrf: csrf.generateToken()
+  });
 
 })
 
 router.get('/login', async function(req, res, next) {
 
-  res.render('login', {failed: false, csrf: csrf.generateToken()});
+  res.render('login', {
+    failed: false, 
+    csrf: csrf.generateToken()
+  });
 
 });
 
@@ -43,7 +48,7 @@ router.get('/', async function(req, res, next) {
 
 router.get('/home', checkSessionAuth, async function(req, res, next) {
 
-  db.get("SELECT name FROM user WHERE id=?", [req.session.userId], (err, row) => {
+  db.get("SELECT name, backgroundUrl FROM user WHERE id=?", [req.session.userId], (err, row) => {
 
     if(row) {
 
@@ -51,7 +56,17 @@ router.get('/home', checkSessionAuth, async function(req, res, next) {
       
         db.all('SELECT id, email FROM user', (error2, users) => {
 
-          res.render('landing', {username: row.name, author: req.session.userId, messages: messages, recipients: users, csrf: csrf.generateToken()});
+          console.log("Saved background:")
+          console.log(row.backgroundUrl)
+          
+          res.render('landing', {
+            bgUrl: row.backgroundUrl ? row.backgroundUrl : false,
+            username: row.name, 
+            author: req.session.userId, 
+            messages: messages, 
+            recipients: users, 
+            csrf: csrf.generateToken()
+          });
         
         });
 
@@ -93,7 +108,10 @@ router.post('/login', checkCSRF, async function(req, res, next) {
       })
   
     } else {
-      res.render('login', {failed: true, csrf: csrf.generateToken()});
+      res.render('login', {
+        failed: true, 
+        csrf: csrf.generateToken()
+      });
     }
     
   })
@@ -103,20 +121,19 @@ router.post('/login', checkCSRF, async function(req, res, next) {
 router.get('/logout', async function(req, res, next) {
   req.session.destroy((err) => {
     res.clearCookie('admin')
+    res.clearCookie('bg')
     res.redirect('/')
   })
 })
-
-// TODO
-// - Make the login cookie insecure
-// - Outline the proper remediations for all of the above
 
 router.post('/register', checkCSRF, async function(req, res, next) {
   
   var reqEmail = req.body.email;
 
   if(req.body.email.length === 0 || req.body.password.length === 0) {
-    res.render('register', {failed: true});
+    res.render('register', {
+      failed: true
+    });
     return;
   }
 
@@ -130,7 +147,10 @@ router.post('/register', checkCSRF, async function(req, res, next) {
       })
 
     } else {
-      res.render('register', {failed: true, csrf: csrf.generateToken()});
+      res.render('register', {
+        failed: true, 
+        csrf: csrf.generateToken()
+      });
     }
 
   })
@@ -165,6 +185,7 @@ router.get('/profile', checkSessionAuth, async function(req, res, next) {
       db.all('SELECT comment, name, comment.id FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.session.userId], (error, comments) => {
 
         res.render('profile', {
+          bgUrl: row.backgroundUrl ? row.backgroundUrl : false,
           username: row.name,
           email: row.email,
           password: row.password,
@@ -202,6 +223,7 @@ router.get('/profile/:uid', async function(req, res, next) {
       db.all('SELECT comment, name, comment.id, comment.author FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
 
         res.render('profile', {
+          bgUrl: row.backgroundUrl ? row.backgroundUrl : false,
           cid: row.id,
           username: row.name,
           email: row.email,
@@ -271,7 +293,7 @@ router.get('/debug/:file', checkSessionAuth, async function(req, res, next) {
 // File upload form
 router.get('/upload', checkSessionAuth, async function(req, res, next) {
   res.render('upload', {
-
+    bgUrl: req.cookies.bg ? req.cookies.bg : false,
   })
 })
 
@@ -286,16 +308,30 @@ router.post('/upload', checkSessionAuth, upload.single('filecontent'), async fun
   
     fs.unlinkSync(req.file.path);
     res.render('upload', {
+      bgUrl: req.cookies.bg ? req.cookies.bg : false,
       uploadFail: true
     })
   } else {
   
     res.render('upload', {
+      bgUrl: req.cookies.bg ? req.cookies.bg : false,
       uploadComplete: true,
       uploadLocation: `files/${req.file.filename}`,
       uploadName: req.file.filename
     })
   }
+})
+
+// Set background
+router.post('/background', checkSessionAuth, async function(req, res, next) {
+
+  db.run("UPDATE user SET backgroundUrl=? WHERE session=?", [req.body.backgroundUrl, req.sessionID], (error, update) => {
+
+    res.cookie('bg', req.body.backgroundUrl);
+    res.status(202).redirect('/');
+
+  });
+
 })
 
 // Catch all 404

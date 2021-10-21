@@ -1,14 +1,15 @@
 <div class="row g-0 justify-content-between align-items-start">
     <h1 class="col-auto">Welcome {{username}}</h1>
     <div class="col-auto">
-        <a href="/profile" style="text-decoration: none;" class="row g-0">My profile</a>
-        <a href="/logout" style="text-decoration: none;" class="row g-0">Logout</a>
+        <a href="/profile" class="row g-0">Profile</a>
+        <a href="/upload" class="row g-0">Upload</a>
+        <a href="/logout" class="row g-0">Logout</a>
     </div>
 </div>
 
-<h2>Direct messages:</h2>
+<div>Message someone:</div>
 <form method="POST" action="/message">
-    <div class="row g-0 justify-content-start align-items-end">
+    <div class="row g-0 justify-content-start align-items-end form-group">
         <input type="hidden" name="author" value={{author}}>
         <div class="input-group mb-1 row g-0">
             <div class="input-group-prepend col-auto">
@@ -24,13 +25,14 @@
             <input name="csrf" type="hidden" value={{csrf}}>
 
         </div>
-        <textarea name="message" class="mb-1 p-1" placeholder="Message"></textarea>
+        <textarea name="message" class="form-control mb-1 p-1" placeholder="Message"></textarea>
         <input type="submit" value="Send" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
     </div>
 </form>
+<div>Direct messages:</div>
 <div class="row g-0">
     {{#each messages}}
-        <div class="shadow rounded border border-dark mb-3">
+        <div class="alert alert-secondary p-0" role="alert">
             <a href="/delete/message/{{this.id}}" class="btn btn-danger col-auto shadow p-0"><i class="bi bi-x"></i></a>
             <div class="px-4 pb-1">
                 <a href="/profile/{{this.author}}">{{this.name}}</a> said:
@@ -42,4 +44,4 @@
         </div>
     {{/each}}    
 </div>
-<a href="/upload">Upload a reaction image</a>
+<br>
