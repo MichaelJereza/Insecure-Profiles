@@ -30,7 +30,7 @@
                     <a href="/delete/comment/{{this.id}}" class="btn btn-danger col-auto shadow p-0"><i class="bi bi-x"></i></a>
                 {{/if}}
                 <h1 class="row g-0 mx-3">"{{{this.comment}}}"</h1>
-                <div class="row g-0 px-3 justify-content-start align-items-start">{{this.name}}</div>
+                <div class="row g-0 px-3 justify-content-start align-items-start"><a href="/profile/{{this.author}}">{{this.name}}</a></div>
             </div>
     {{/each}}
     </div>

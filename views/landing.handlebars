@@ -10,12 +10,12 @@
 <form method="POST" action="/message">
     <div class="row g-0 justify-content-start align-items-end">
         <input type="hidden" name="author" value={{author}}>
-        <div class="input-group mb-1">
-            <div class="input-group-prepend">
+        <div class="input-group mb-1 row g-0">
+            <div class="input-group-prepend col-auto">
                 <label class="input-group-text" id="recipient-label" for="recipient-select">To:</label>
             </div>
-            <select name="recipient" aria-describedby="recipient-label" id="recipient-select" class="custom-select">
-                <option hidden selected></option>
+            <select name="recipient" aria-describedby="recipient-label" id="recipient-select" class="form-select custom-select col">
+                <option hidden selected>Recipient</option>
                 {{#each recipients}}
                     <option value={{this.id}}>{{this.email}}</option>
                 {{/each}}
@@ -28,13 +28,12 @@
         <input type="submit" value="Send" style="width: 5em !important; height: 2.5em !important" class="btn btn-primary">
     </div>
 </form>
-
 <div class="row g-0">
     {{#each messages}}
         <div class="shadow rounded border border-dark mb-3">
             <a href="/delete/message/{{this.id}}" class="btn btn-danger col-auto shadow p-0"><i class="bi bi-x"></i></a>
             <div class="px-4 pb-1">
-                {{this.name}} said:
+                <a href="/profile/{{this.author}}">{{this.name}}</a> said:
                 <h3>
                     {{this.message}}
                 </h3>
@@ -43,3 +42,4 @@
         </div>
     {{/each}}    
 </div>
+<a href="/upload">Upload a reaction image</a>

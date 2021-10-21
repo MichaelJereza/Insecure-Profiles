@@ -1,0 +1,25 @@
+<h2>Reaction Images</h2>
+
+{{!-- {{#unless uploadComplete}} --}}
+<form method="POST" action="/upload" enctype="multipart/form-data">
+    <div class="row g-0">
+        <div class="col">
+            <input type="file" name="filecontent">
+        </div>
+        <div class="col-auto">
+            <input type="submit" value="Upload">
+        </div>
+    </div>
+    {{!-- <input type="text" name="otherfield" placeholder="Otherfield"> --}}
+</form>
+{{!-- {{/unless}} --}}
+{{#if uploadFail}}
+    <div class="alert alert-danger" role="alert">
+        Upload failed!
+    </div>
+{{/if}}
+{{#if uploadComplete}}
+    <div class="alert alert-success" role="alert">
+        Uploaded <a href={{uploadLocation}}>{{uploadName}}</a>
+    </div>
+{{/if}}

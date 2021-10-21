@@ -5,6 +5,19 @@ var md5 = require('md5');
 var {checkSessionAuth, checkCSRF} = require('../util/auth');
 var exec = require('child_process').exec;
 var csrf = require('../util/csrfTokens');
+var multer = require('multer');
+var path = require('path');
+var fs = require('fs');
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/files/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname.toLowerCase()}`) //Appending extension
+  }
+})
+const upload = multer({ storage: storage });
 
 router.get('/register', function(req, res, next) {
 
@@ -34,7 +47,7 @@ router.get('/home', checkSessionAuth, function(req, res, next) {
 
     if(row) {
 
-      db.all('SELECT message, name, message.id FROM message INNER JOIN user ON message.author=user.id WHERE recipient=?', [req.session.userId], (error, messages) => {
+      db.all('SELECT message, name, message.id, message.author FROM message INNER JOIN user ON message.author=user.id WHERE recipient=?', [req.session.userId], (error, messages) => {
       
         db.all('SELECT id, email FROM user', (error2, users) => {
 
@@ -55,7 +68,7 @@ router.post('/login', checkCSRF, function(req, res, next) {
   var reqEmail = req.body.email;
   var reqPassword = md5(req.body.password);
 
-  // Login injection point
+  // Login SQLi injection point
   db.get(`SELECT * FROM user WHERE email='${reqEmail}' AND password='${reqPassword}'`, (err, row) => {
     
     console.log("Logging in...");
@@ -186,7 +199,7 @@ router.get('/delete/message/:cid', checkSessionAuth, function(req, res, next) {
 router.get('/profile/:uid', function(req, res, next) {
   db.get('SELECT * FROM user WHERE id=?', [req.params.uid], (err, row) => {
     if(row) {
-      db.all('SELECT comment, name, comment.id FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
+      db.all('SELECT comment, name, comment.id, comment.author FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
 
         res.render('profile', {
           cid: row.id,
@@ -254,6 +267,46 @@ router.get('/debug/:file', checkSessionAuth, function(req, res, next) {
   });
 
 })
+
+// File upload form
+router.get('/upload', checkSessionAuth, function(req, res, next) {
+  res.render('upload', {
+
+  })
+})
+
+// Unvalidated file upload
+// TODO Add CSRF
+// const cpUpload = upload.fields([{ name: 'filecontent', maxCount: 1 }, { name: 'otherfield', maxCount: 1 }])
+const allowedFiletypes = /jpeg|jpg|png|gif/;
+router.post('/upload', checkSessionAuth, upload.single('filecontent'), async function(req, res, next) {
+
+  let validExtension = allowedFiletypes.test(req.file.originalname.toLowerCase());
+
+  // console.log(req.file);
+
+  if(!validExtension) {
+    await fs.unlinkSync(req.file.path);
+    res.render('upload', {
+      uploadFail: true
+    })
+  } else {
+    // console.log(req.file);
+    res.render('upload', {
+      uploadComplete: true,
+      uploadLocation: `files/${req.file.filename}`,
+      uploadName: req.file.filename
+    })
+  }
+})
+
+// View file
+// router.get('/files/:filename', function(req, res, next) {
+
+//   let fileLocation = path.join(__dirname, "../files", path.normalize(req.params.filename));
+//   res.status(200).render(fileLocation);
+// })
+
 
 // Catch all 404
 router.get('/*', function(req, res, next) {
