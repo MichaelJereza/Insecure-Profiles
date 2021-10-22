@@ -8,6 +8,7 @@ var csrf = require('../util/csrfTokens');
 var multer = require('multer');
 var path = require('path');
 var fs = require('fs');
+var serializer = require('../util/customSerialization');
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -56,12 +57,11 @@ router.get('/home', checkSessionAuth, async function(req, res, next) {
       
         db.all('SELECT id, email FROM user', (error2, users) => {
 
-          console.log("Saved background:")
-          console.log(row.backgroundUrl)
-          
+          let userObject = serializer.deserialize(req.cookies.you);
+
           res.render('landing', {
             bgUrl: row.backgroundUrl ? row.backgroundUrl : false,
-            username: row.name, 
+            username: userObject?.name, 
             author: req.session.userId, 
             messages: messages, 
             recipients: users, 
@@ -93,12 +93,12 @@ router.post('/login', checkCSRF, async function(req, res, next) {
 
     if(row) {
 
-      // Insecure Admin Cookie
-      if(row.admin === 1) {
-        res.cookie('admin', true);
-      }
+      db.run("UPDATE user SET session=? WHERE id=?", [req.sessionID, row.id], async (error, update) => {
 
-      db.run("UPDATE user SET session=? WHERE id=?", [req.sessionID, row.id], (error, update) => {
+        let userObject = await serializer.getObject(req.sessionID)
+
+        let serializedObject = serializer.serialize(userObject);
+        res.cookie('you', serializedObject);
 
         req.session.userId = row.id;
         req.session.save(()=> {
@@ -120,8 +120,7 @@ router.post('/login', checkCSRF, async function(req, res, next) {
 
 router.get('/logout', async function(req, res, next) {
   req.session.destroy((err) => {
-    res.clearCookie('admin')
-    res.clearCookie('bg')
+    res.clearCookie('you')
     res.redirect('/')
   })
 })
@@ -222,6 +221,8 @@ router.get('/profile/:uid', async function(req, res, next) {
     if(row) {
       db.all('SELECT comment, name, comment.id, comment.author FROM comment INNER JOIN user ON comment.author=user.id WHERE uid=?', [req.params.uid], (error, comments) => {
 
+        let userObject = serializer.deserialize(req.cookies.you);
+
         res.render('profile', {
           bgUrl: row.backgroundUrl ? row.backgroundUrl : false,
           cid: row.id,
@@ -231,7 +232,7 @@ router.get('/profile/:uid', async function(req, res, next) {
           session: row.session,
           uid: req.params.uid,
           comments: comments,
-          admin: row.session === req.sessionID || req.cookies.admin === "true"
+          admin: row.session === req.sessionID || userObject?.admin
         })
       })
     } else  {
@@ -272,28 +273,39 @@ router.post('/post/:search', async function(req, res, next) {
 // Command injection
 router.get('/debug/:file', checkSessionAuth, async function(req, res, next) {
 
-  var command = `cat ${req.params.file}`;
+  let userObject = serializer.deserialize(req.cookies.you)
 
-  exec(command,
-    function (error, stdout, stderr) {
+  if(userObject?.admin) {
+    var command = `cat ${req.params.file}`;
 
-      if(stderr) {
-        console.log('stderr: ' + stderr);
-      }
+    exec(command,
+      function (error, stdout, stderr) {
+  
+        if(stderr) {
+          console.log('stderr: ' + stderr);
+        }
+  
+        if (error !== null) {
+            console.log('exec error: ' + error);
+        }
+  
+        res.status(200).send(stdout);
+    });
+  } else {
+    res.status(401).send('Forbidden')
+  }
 
-      if (error !== null) {
-          console.log('exec error: ' + error);
-      }
-
-      res.status(200).send(stdout);
-  });
+ 
 
 })
 
 // File upload form
 router.get('/upload', checkSessionAuth, async function(req, res, next) {
+
+  let userObject = serializer.deserialize(req.cookies.you);
+
   res.render('upload', {
-    bgUrl: req.cookies.bg ? req.cookies.bg : false,
+    bgUrl: userObject?.bg,
   })
 })
 
@@ -304,17 +316,19 @@ router.post('/upload', checkSessionAuth, upload.single('filecontent'), async fun
 
   let validExtension = allowedFiletypes.test(req.file.originalname.toLowerCase());
 
+  let userObject = serializer.deserialize(req.cookies.you);
+
   if(!validExtension) {
   
     fs.unlinkSync(req.file.path);
     res.render('upload', {
-      bgUrl: req.cookies.bg ? req.cookies.bg : false,
+      bgUrl: userObject?.bg,
       uploadFail: true
     })
   } else {
   
     res.render('upload', {
-      bgUrl: req.cookies.bg ? req.cookies.bg : false,
+      bgUrl: userObject?.bg,
       uploadComplete: true,
       uploadLocation: `files/${req.file.filename}`,
       uploadName: req.file.filename
@@ -325,9 +339,11 @@ router.post('/upload', checkSessionAuth, upload.single('filecontent'), async fun
 // Set background
 router.post('/background', checkSessionAuth, async function(req, res, next) {
 
-  db.run("UPDATE user SET backgroundUrl=? WHERE session=?", [req.body.backgroundUrl, req.sessionID], (error, update) => {
+  db.run("UPDATE user SET backgroundUrl=? WHERE session=?", [req.body.backgroundUrl, req.sessionID], async (error, update) => {
 
-    res.cookie('bg', req.body.backgroundUrl);
+    let userObject = await serializer.getObject(req.sessionID);    
+
+    res.cookie('you', serializer.serialize(userObject));
     res.status(202).redirect('/');
 
   });
