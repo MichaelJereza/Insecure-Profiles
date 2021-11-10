@@ -141,8 +141,11 @@ router.post('/register', checkCSRF, async function(req, res, next) {
     if(!row) {
 
       db.run("INSERT INTO user (name, email, password) VALUES(?, ?, ?)", [req.body.name, reqEmail, md5(req.body.password)], (error, newRow) => {
-        
+
         res.redirect('/login');
+
+        insertWelcomeMessage(req.body.name, reqEmail);
+
       })
 
     } else {
@@ -155,6 +158,16 @@ router.post('/register', checkCSRF, async function(req, res, next) {
   })
 
 })
+
+async function insertWelcomeMessage(name, email) {
+  
+  const message = `Welcome to the site, ${name}!`;
+
+  db.run("INSERT INTO message (message, author, recipient) VALUES(?, (SELECT id FROM user WHERE name='admin'), (SELECT id FROM user WHERE email=?))",[message, email], (err, row)=>{
+
+  })
+
+}
 
 // CSRF Vulnerable
 router.post('/comment', checkSessionAuth, function(req, res ,next) {
