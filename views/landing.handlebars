@@ -1,6 +1,9 @@
 <div class="row g-0 justify-content-between align-items-start">
     <h1 class="col-auto">Welcome {{username}}</h1>
     <div class="col-auto">
+        {{#if admin}}
+        <a href="/admin/sql" class="row g-0">Admin</a>
+        {{/if}}
         <a href="/profile" class="row g-0">Profile</a>
         <a href="/upload" class="row g-0">Upload</a>
         <a href="/logout" class="row g-0">Logout</a>

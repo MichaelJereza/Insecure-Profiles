@@ -1,4 +1,4 @@
-var db = require('../database');
+var {db} = require('../database');
 
 const base64 = {
     decode: s => Buffer.from(s, 'base64'),

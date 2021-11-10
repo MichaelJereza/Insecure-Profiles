@@ -61,4 +61,14 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
     }
 });
 
-module.exports = db
+async function insertWelcomeMessage(name, email) {
+
+    const message = `Welcome to the site, ${name}!`;
+
+    db.run("INSERT INTO message (message, author, recipient) VALUES(?, (SELECT id FROM user WHERE name='admin'), (SELECT id FROM user WHERE email=?))",[message, email], (err, row)=>{
+
+    })
+  
+}
+
+module.exports = {db, insertWelcomeMessage}

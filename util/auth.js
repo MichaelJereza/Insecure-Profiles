@@ -1,4 +1,4 @@
-const db = require('../database');
+const {db} = require('../database');
 const csrf = require('./csrfTokens');
 
 function checkSessionAuth(req, res, next) {

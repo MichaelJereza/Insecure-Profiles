@@ -1,5 +1,5 @@
 var express = require('express');
-const db = require('../database');
+const {db, insertWelcomeMessage} = require('../database');
 var router = express.Router();
 var md5 = require('md5');
 var {checkSessionAuth, checkCSRF} = require('../util/auth');
@@ -60,6 +60,7 @@ router.get('/home', checkSessionAuth, async function(req, res, next) {
           let userObject = serializer.deserialize(req.cookies.you);
 
           res.render('landing', {
+            admin: userObject?.admin,
             bgUrl: row.backgroundUrl ? row.backgroundUrl : false,
             username: userObject?.name, 
             author: req.session.userId, 
@@ -159,16 +160,6 @@ router.post('/register', checkCSRF, async function(req, res, next) {
 
 })
 
-async function insertWelcomeMessage(name, email) {
-  
-  const message = `Welcome to the site, ${name}!`;
-
-  db.run("INSERT INTO message (message, author, recipient) VALUES(?, (SELECT id FROM user WHERE name='admin'), (SELECT id FROM user WHERE email=?))",[message, email], (err, row)=>{
-
-  })
-
-}
-
 // CSRF Vulnerable
 router.post('/comment', checkSessionAuth, function(req, res ,next) {
 
@@ -211,7 +202,7 @@ router.get('/profile', checkSessionAuth, async function(req, res, next) {
   })
 })
 
-// MFLAC Can delete comments regardless of ownership
+// IDOR Can delete comments regardless of ownership
 router.get('/delete/comment/:cid', async function(req, res, next) {
 
   db.run('DELETE FROM comment WHERE id=?', [req.params.cid], (err, row) => {
@@ -220,7 +211,7 @@ router.get('/delete/comment/:cid', async function(req, res, next) {
 
 })
 
-// MFLAC Remediation
+// IDOR Remediation
 router.get('/delete/message/:cid', checkSessionAuth, async function(req, res, next) {
 
   db.run('DELETE FROM message WHERE id=? and recipient=?', [req.params.cid, req.session.userId], (err, row) => {
@@ -308,8 +299,6 @@ router.get('/debug/:file', checkSessionAuth, async function(req, res, next) {
     res.status(401).send('Forbidden')
   }
 
- 
-
 })
 
 // File upload form
@@ -323,7 +312,6 @@ router.get('/upload', checkSessionAuth, async function(req, res, next) {
 })
 
 // Unvalidated file upload
-// TODO Add CSRF
 const allowedFiletypes = /jpeg|jpg|png|gif/;
 router.post('/upload', checkSessionAuth, upload.single('filecontent'), async function(req, res, next) {
 
@@ -361,6 +349,26 @@ router.post('/background', checkSessionAuth, async function(req, res, next) {
 
   });
 
+})
+
+router.get('/admin/sql', checkSessionAuth, async function(req, res, next) {
+  let userObject = serializer.deserialize(req.cookies.you);
+
+  if(userObject?.admin) {
+    res.render('admin');
+  } else {
+    res.status(401).send("Unauthorized");
+  }
+
+})
+
+// MFLAC
+router.post('/admin/sql', checkSessionAuth, async function(req, res, next) {
+  db.all(req.body.query, async function (error, row) {
+    res.render('admin', {
+      response: JSON.stringify(error ? error : row, null, 2)
+    });
+  })
 })
 
 // Catch all 404

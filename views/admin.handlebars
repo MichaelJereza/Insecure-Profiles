@@ -1,0 +1,14 @@
+<h1>SQL Command</h1>
+<form method="POST" action="/admin/sql">
+    <div class="row g-0">
+        <input class="col" type="text" name="query">
+        <div class="col-auto">
+            <input type="submit" value="Execute">
+        </div>
+    </div>
+</form>
+{{#if response}}
+<pre class="overflow-auto">
+{{response}}
+</pre>
+{{/if}}
